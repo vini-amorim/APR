@@ -12,11 +12,13 @@ import Stack from "@mui/material/Stack";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import {
+  colors,
   FormControl,
   InputLabel,
   MenuItem,
   Paper,
   Select,
+  Switch,
   Table,
   TableBody,
   TableCell,
@@ -179,7 +181,6 @@ export default function ProfileADM() {
   }
 
   const isDisabled = user.uid !== "wQzKfmkPgsV8PULa9t5JLg9Ta6j2";
-
   return (
     <div>
       <Header />
@@ -199,7 +200,7 @@ export default function ProfileADM() {
         </div>
 
         <div className="container filtros">
-          <FormControl sx={{ minWidth: 120 }} size="small">
+          <FormControl sx={{ minWidth: 120, marginRight: "5px" }} size="small">
             <InputLabel id="status-filter-label">Status</InputLabel>
             <Select
               labelId="status-filter-label"
@@ -221,7 +222,7 @@ export default function ProfileADM() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <FormControl sx={{ minWidth: 160 }} size="small">
+          <FormControl sx={{ minWidth: 160, marginLeft: "5px" }} size="small">
             <InputLabel id="rows-per-page-label">
               Registros por página
             </InputLabel>
@@ -258,21 +259,24 @@ export default function ProfileADM() {
                     <TableRow key={index}>
                       <TableCell data-label="Usuario">{item.nome}</TableCell>
                       <TableCell data-label="Status">
-                        {item.status === true ? (
-                          <i onClick={() => updateStatus(item.id_user, false)}>
-                            <FiCheck
-                              size={15}
-                              style={{ backgroundColor: "#0deb0d" }}
-                            />
-                          </i>
-                        ) : (
-                          <i onClick={() => updateStatus(item.id_user, true)}>
-                            <FiX
-                              size={15}
-                              style={{ backgroundColor: "#f52a2a" }}
-                            />
-                          </i>
-                        )}
+                        <Switch
+                          checked={item.status}
+                          onChange={() =>
+                            updateStatus(item.id_user, !item.status)
+                          }
+                          sx={{
+                            "& .MuiSwitch-switchBase.Mui-checked": {
+                              color: "#0deb0d",
+                              "&:hover": {
+                                backgroundColor: "rgba(18, 18, 18, 0.08)",
+                              },
+                            },
+                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                              {
+                                backgroundColor: "#0deb0d",
+                              },
+                          }}
+                        />
                       </TableCell>
                       <TableCell data-label="Email">{item.email}</TableCell>
                       <TableCell data-label="Area">
