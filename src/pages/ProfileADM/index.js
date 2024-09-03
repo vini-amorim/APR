@@ -1,13 +1,16 @@
 import { useState, useEffect, useContext } from "react";
 import { FiUsers, FiX, FiCheck, FiLock } from "react-icons/fi";
 import { toast } from "react-toastify";
-
 import { AuthContext } from "../../contexts/auth";
 import firebase from "../../services/firebaseConnection";
 import Title from "../../components/Title";
 import Header from "../../components/Header";
-
 import "./profileAdm.css";
+import Pagination from "@mui/material/Pagination";
+import PaginationItem from "@mui/material/PaginationItem";
+import Stack from "@mui/material/Stack";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import {
   FormControl,
   InputLabel,
@@ -20,6 +23,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
 } from "@mui/material";
 
 const listRef = firebase.firestore().collection("users");
@@ -27,11 +31,19 @@ const listRef = firebase.firestore().collection("users");
 export default function ProfileADM() {
   const { user, logSistem } = useContext(AuthContext);
   const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     loadUsers();
-  });
+  }, []);
 
+  useEffect(() => {
+    filterUsers();
+  }, [users, statusFilter, search, page, rowsPerPage]);
   async function loadUsers() {
     let query = listRef;
 
@@ -60,6 +72,28 @@ export default function ProfileADM() {
       .catch((err) => {
         console.log("Deu algum erro: ", err);
       });
+  }
+
+  function filterUsers() {
+    let filtered = users;
+
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(
+        (user) => user.status === (statusFilter === "active")
+      );
+    }
+
+    if (search) {
+      filtered = filtered.filter(
+        (user) =>
+          user.nome.toLowerCase().includes(search.toLowerCase()) ||
+          user.email.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    setFilteredUsers(
+      filtered.slice((page - 1) * rowsPerPage, page * rowsPerPage)
+    );
   }
 
   async function updateNivel(id_user, nivel) {
@@ -164,20 +198,62 @@ export default function ProfileADM() {
           </span>
         </div>
 
+        <div className="container filtros">
+          <FormControl sx={{ minWidth: 120 }} size="small">
+            <InputLabel id="status-filter-label">Status</InputLabel>
+            <Select
+              labelId="status-filter-label"
+              id="status-filter"
+              value={statusFilter}
+              label="Status"
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <MenuItem value="all">Todos</MenuItem>
+              <MenuItem value="active">Ativos</MenuItem>
+              <MenuItem value="inactive">Inativos</MenuItem>
+            </Select>
+          </FormControl>
+          <TextField
+            id="search"
+            label="Buscar"
+            variant="outlined"
+            size="small"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <FormControl sx={{ minWidth: 160 }} size="small">
+            <InputLabel id="rows-per-page-label">
+              Registros por página
+            </InputLabel>
+            <Select
+              labelId="rows-per-page-label"
+              id="rows-per-page"
+              value={rowsPerPage}
+              label="Registros por página"
+              onChange={(e) => setRowsPerPage(e.target.value)}
+            >
+              <MenuItem value={5}>5</MenuItem>
+              <MenuItem value={10}>10</MenuItem>
+              <MenuItem value={20}>20</MenuItem>
+              <MenuItem value={50}>50</MenuItem>
+            </Select>
+          </FormControl>
+        </div>
+
         <div className="container table-usuarios">
-          <TableContainer component={Paper}>
+          <TableContainer component={Paper} className="table-users">
             <Table sx={{ minWidth: 650 }} aria-label="simple table">
               <TableHead>
                 <TableRow>
                   <TableCell>Nome</TableCell>
                   <TableCell align="center">Status</TableCell>
-                  <TableCell align="center">Trocar Senha</TableCell>
-                  <TableCell align="center">Usuario</TableCell>
+                  <TableCell align="center">Email</TableCell>
+                  <TableCell align="center">Área</TableCell>
                   <TableCell align="center">Nível de Usuário</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {users.map((item, index) => {
+                {filteredUsers.map((item, index) => {
                   return (
                     <TableRow key={index}>
                       <TableCell data-label="Usuario">{item.nome}</TableCell>
@@ -185,14 +261,14 @@ export default function ProfileADM() {
                         {item.status === true ? (
                           <i onClick={() => updateStatus(item.id_user, false)}>
                             <FiCheck
-                              size={20}
+                              size={15}
                               style={{ backgroundColor: "#0deb0d" }}
                             />
                           </i>
                         ) : (
                           <i onClick={() => updateStatus(item.id_user, true)}>
                             <FiX
-                              size={20}
+                              size={15}
                               style={{ backgroundColor: "#f52a2a" }}
                             />
                           </i>
@@ -204,13 +280,6 @@ export default function ProfileADM() {
                           ? "empresarial"
                           : item.area}
                       </TableCell>
-                      {user.uid === "wQzKfmkPgsV8PULa9t5JLg9Ta6j2" && (
-                        <TableCell data-label="Trocar Senha">
-                          <i onClick={() => trocaSenha(item.id_user)}>
-                            <FiLock style={{ backgroundColor: "#716c6c" }} />
-                          </i>
-                        </TableCell>
-                      )}
                       <TableCell className="level-users">
                         <FormControl sx={{ minWidth: 120 }} size="small">
                           <InputLabel id="demo-select-small-label">
@@ -221,7 +290,7 @@ export default function ProfileADM() {
                             id="demo-select-small"
                             label="Nível de Usuário"
                             key={"nivel-" + index}
-                            value={item.nivel}
+                            value={item.nivel || ""}
                             onChange={(e) =>
                               updateNivel(item.id_user, e.target.value)
                             }
@@ -233,7 +302,6 @@ export default function ProfileADM() {
                               Administrador
                             </MenuItem>
                             <MenuItem value={"supervisor"}>Supervisor</MenuItem>
-                            <MenuItem value={"aplicador"}>Aplicador</MenuItem>
                             <MenuItem value={"revisor"}>Revisor</MenuItem>
                             <MenuItem value={"auditor"}>Auditor</MenuItem>
                           </Select>
@@ -270,6 +338,20 @@ export default function ProfileADM() {
             </Table>
           </TableContainer>
         </div>
+
+        <Stack spacing={2} className="pagination">
+          <Pagination
+            count={Math.ceil(users.length / rowsPerPage)}
+            page={page}
+            onChange={(event, value) => setPage(value)}
+            renderItem={(item) => (
+              <PaginationItem
+                slots={{ previous: ArrowBackIcon, next: ArrowForwardIcon }}
+                {...item}
+              />
+            )}
+          />
+        </Stack>
       </div>
     </div>
   );

@@ -64,7 +64,42 @@ td.MuiTableCell-root.MuiTableCell-body.MuiTableCell-sizeMedium.css-1ex1afd-MuiTa
 /* Inputs */
 
 .table-usuarios .level-users {
-  display:flex;
+  display:flex!important;
   flex-direction:column!important;
   gap:10px!important;
+}
+
+/* Paginations */
+.css-1sazv7p-MuiStack-root>:not(style):not(style) {
+  margin: 0 auto!important;
+  padding-bottom: 30px;
+}
+
+ul.MuiPagination-ul.css-wjh20t-MuiPagination-ul li button{
+    background:#380054e8!important;
+    padding:10px;
+    color:#fff!important;
+}
+/* Mobile */
+@media(max-width:767px) {
+  .container.filtros {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch
+}
+
+.table-users table tr {
+  display:flex;
+  flex-direction:column;
+  align-content: space-between;
+  align-items: flex-start;
+}
+
+.table-users table tr td:before {
+  padding-right:5px
+}
+
+.table-usuarios .level-users {
+  width: 260px;
+}
 }
